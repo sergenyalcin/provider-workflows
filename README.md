@@ -6,7 +6,7 @@ Repository for commonly shared GitHub CI workflows that can be used by Crossplan
 
 ## Available workflows
 
-Find these workflow files in the `.github/workflows` directory.
+Find these workflow files in the [.github/workflows](https://github.com/crossplane-contrib/provider-workflows/tree/main/.github/workflows) directory.
 
 | Workflow                   | Description                                                                                                    |
 |----------------------------|----------------------------------------------------------------------------------------------------------------|

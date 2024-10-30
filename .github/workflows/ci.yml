@@ -1,23 +1,52 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-      - release-*
-  pull_request: {}
-  workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      runs-on:
+        default: ubuntu-latest
+        required: false
+        type: string
+      go-version:
+        description: 'Go version to use'
+        default: '1.23'
+        required: false
+        type: string
+      golangci-version:
+        description: 'GolangCI version to use'
+        default: 'v1.61.0'
+        required: false
+        type: string
+      docker-buildx-version:
+        description: 'GolangCI version to use'
+        default: 'v0.17.1'
+        required: false
+        type: string
+      aws-default-region:
+        description: 'AWS region to use for uploading packages to S3'
+        default: 'us-east-1'
+        required: false
+    secrets:
+      aws-access-key-id:
+        description: 'AWS Access Key ID for uploading build package to S3'
+        required: false
+      aws-access-key-secret:
+        description: 'AWS Access Key secret for uploading build package to S3'
+        required: false
+
 
 env:
-  # Common versions
-  GO_VERSION: '1.23'
-  GOLANGCI_VERSION: 'v1.61.0'
-  DOCKER_BUILDX_VERSION: 'v0.17.1'
+  GO_VERSION: ${{ inputs.go-version }}
+  GOLANGCI_VERSION: ${{ inputs.golangci-version }}
+  DOCKER_BUILDX_VERSION: ${{ inputs.docker-buildx-version }}
+  AWS_DEFAULT_REGION: ${{ inputs.aws-default-region }}
 
   # Common users. We can't run a step 'if secrets.XXX != ""' but we can run a
   # step 'if env.XXX' != ""', so we copy these to succinctly test whether
   # credentials have been provided before trying to run steps that need them.
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.aws-access-key-id }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws-access-key-secret }}
+
 jobs:
   detect-noop:
     runs-on: ubuntu-latest
@@ -176,8 +205,8 @@ jobs:
         run: make -j2 publish BRANCH_NAME=${GITHUB_REF##*/}
         if: env.AWS_ACCESS_KEY_ID != ''
         env:
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
 
       - name: Promote Artifacts in S3
         if: github.ref == 'refs/heads/main' && env.AWS_ACCESS_KEY_ID != ''
@@ -185,5 +214,5 @@ jobs:
         env:
           BRANCH_NAME: main
           CHANNEL: main
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
