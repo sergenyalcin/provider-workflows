@@ -1,0 +1,20 @@
+name: Backport
+
+# See also backport-comment-trigger.yml for the /backport triggered variant of this workflow.
+
+on:
+  pull_request_target:
+    types: [closed]
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Open Backport PR
+        uses: zeebe-io/backport-action@be567af183754f6a5d831ae90f648954763f17f5 # v3.1.0
