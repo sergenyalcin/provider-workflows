@@ -35,7 +35,7 @@ env:
   DOCKER_BUILDX_VERSION: 'v0.8.2'
   UP_VERSION: 'v0.34.2'
   CROSSPLANE_REGORG: 'ghcr.io/sergenyalcin' # xpkg.crossplane.io/crossplane-contrib
-  UPBOUND_REGORG: 'xpkg.upbound.io/upbound'
+  UPBOUND_REGORG: 'xpkg.dev-deba7a0e.u6d.dev/upbound'
 
 jobs:
   publish-service-artifacts:
