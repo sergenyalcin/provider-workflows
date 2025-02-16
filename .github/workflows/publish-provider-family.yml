@@ -45,6 +45,8 @@ on:
     secrets:
       GHCR_PAT:
         required: true
+      XPKG_UPBOUND_TOKEN:
+        required: true
 
 env:
   DOCKER_BUILDX_VERSION: 'v0.8.2'
@@ -52,6 +54,7 @@ env:
   CROSSPLANE_REGORG: 'ghcr.io/sergenyalcin' # xpkg.crossplane.io/crossplane-contrib
   UPBOUND_REGORG: 'xpkg.dev-deba7a0e.u6d.dev/upbound'
   UP_TOKEN: ${{ secrets.XPKG_UPBOUND_TOKEN }}
+  UP_DOMAIN: "https://dev-deba7a0e.u6d.dev"
 
 jobs:
   index:
@@ -196,7 +199,7 @@ jobs:
 
       - name: Get creds
         run: |
-          echo "xpkg.upbound.io" | docker-credential-up get > $HOME/.up/up.token.json
+          echo "${{ env.UP_DOMAIN }}" | docker-credential-up get > $HOME/.up/up.token.json
           echo "DOCKER_USERNAME=$(cat $HOME/.up/up.token.json | jq -r '.Username')" >> $GITHUB_ENV
           echo "DOCKER_PWD=$(cat $HOME/.up/up.token.json | jq -r '.Secret')" >> $GITHUB_ENV
 
@@ -204,22 +207,17 @@ jobs:
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
         if: env.DOCKER_USERNAME != ''
         with:
-          registry: xpkg.upbound.io
+          registry: "xpkg.dev-deba7a0e.u6d.dev"
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PWD }}
 
-      - name: Checkout upbound-official-build
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4
-        with:
-          submodules: true
-
       - name: Mirror to xpkg.upbound.io
         run: |
-          for subpackage in $subpackages; do
+          for subpackage in ${{ inputs.subpackages }}; do
               if [ "$subpackage" != "config" ]; then
-                  crane copy ${{ env.CROSSPLANE_REGORG }}/${{ inputs.repository }}-$subpackage:${{ inputs.version }} ${{ env.UPBOUND_REGORG }}/${{ inputs.repository }}-$subpackage:${{ inputs.version }}
+                  crane copy ${{ env.CROSSPLANE_REGORG }}/${{ inputs.repository }}-$subpackage:${{ inputs.version }} ${{ env.UPBOUND_REGORG }}/${{ inputs.repository }}-$subpackage:${{ inputs.version }} --allow-nondistributable-artifacts
               elif [ "$subpackage" == "config" ]; then
                   p=$(echo ${{ inputs.repository }} | sed 's/provider-//')
-                  crane copy ${{ env.CROSSPLANE_REGORG }}/provider-family-$p:${{ inputs.version }} ${{ env.CROSSPLANE_REGORG }}/provider-family-$p:${{ inputs.version }}
+                  crane copy ${{ env.CROSSPLANE_REGORG }}/provider-family-$p:${{ inputs.version }} ${{ env.UPBOUND_REGORG }}/provider-family-$p:${{ inputs.version }} --allow-nondistributable-artifacts
               fi
           done
