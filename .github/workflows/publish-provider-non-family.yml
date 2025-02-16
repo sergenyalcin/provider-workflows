@@ -36,6 +36,7 @@ env:
   UP_VERSION: 'v0.34.2'
   CROSSPLANE_REGORG: 'ghcr.io/sergenyalcin' # xpkg.crossplane.io/crossplane-contrib
   UPBOUND_REGORG: 'xpkg.dev-deba7a0e.u6d.dev/upbound'
+  UP_TOKEN: ${{ secrets.XPKG_UPBOUND_TOKEN }}
 
 jobs:
   publish-service-artifacts:
@@ -142,8 +143,6 @@ jobs:
         run: crane version
 
       - name: Up Login
-        env:
-          UP_TOKEN: ${{ secrets.XPKG_UPBOUND_TOKEN }}
         run: |
           curl -fsSLo /tmp/up --create-dirs 'https://cli.upbound.io/stable/${{ env.UP_VERSION }}/bin/linux_amd64/up' && \
           chmod +x /tmp/up && \
